@@ -2,15 +2,84 @@ pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
 function _init()
- -- print = debug.print
+    world = physics.world{}
+
+    body = oop.class(
+        {},
+        {physics.body},
+        function(self)
+            world:addbody(self)
+        end
+    )
+
+    mob = oop.class(
+        {
+            sprite="req"
+        },
+        {body}
+    )
+
+    function mob:draw()
+        spr(self.sprite, self.pos[1], self.pos[2])
+    end
+
+    rec = oop.class(
+        {
+            color="req",
+            static=true
+        },
+        {body}
+    )
+
+    function rec:draw()
+        rectfill(
+            self.pos[1],
+            self.pos[2],
+            self.pos[1] + self.size[1] - 1,
+            self.pos[2] + self.size[2] - 1,
+            self.color
+        )
+    end
+
+    p = mob{
+        pos={13*8, 11*8},
+        size={8, 8},
+        sprite=1,
+    }
+
+    bounds = {}
+
+    for x=0,15 do
+        for y=0,15 do
+            if fget(mget(x, y)) == 1 then
+                add(bounds, rec{
+                    pos={x*8, y*8},
+                    size={8, 8},
+                    color={3},
+                })
+            end
+        end
+    end
 end
 -->8
 function _update()
+    if btnp(1) then
+        p:shove{3, 0}
+    elseif btnp(0) then
+        p:shove{-3, 0}
+    end
+
+    if btnp(2) then
+        p:shove{0, -6}
+    end
+
+    world:update()
 end
 -->8
 function _draw()
- cls()
- print("hello, world")
+    cls(7)
+    foreach(bounds, rec.draw)
+    p:draw()
 end
 -->8
 --pico-tools
